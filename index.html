@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feliz Día de las Madres 💐</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Feliz Día de las Madres! 🌸</h1>
+            <p>Mamá, eres mi razón de ser</p>
+        </div>
+
+        <div class="gallery">
+            <div class="photo-card" onclick="showLove()">
+                <img src="img/corazon.gif" alt="Corazón animado">
+                <p>Toca el corazón ❤️</p>
+            </div>
+            <div class="photo-card" onclick="playMusic()">
+                <img src="img/musica.jpg" alt="Música">
+                <p>Tu melodía especial 🎶</p>
+            </div>
+            <div class="photo-card" onclick="showMessageForm()">
+                <img src="img/mensaje.jpg" alt="Mensaje">
+                <p>Mostrar mensajes 💌</p>
+            </div>
+        </div>
+
+        <div class="message-box">
+            <h2>Escribe tu mensaje especial ✨</h2>
+            <textarea id="customMessage" rows="4" cols="50" 
+                    placeholder="Expresa todo tu amor aquí..."></textarea>
+            <br>
+            <button onclick="saveMessage()">Guardar Mensaje</button>
+            <div id="savedMessages" class="hidden"></div>
+        </div>
+
+        <div id="secretMessage" class="hidden-message">
+            ¡Eres la mejor mamá del mundo! 🌍💖
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
