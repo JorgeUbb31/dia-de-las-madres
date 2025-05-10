@@ -80,73 +80,88 @@ function deleteMessage(index) {
     localStorage.setItem('mothersDayMessages', JSON.stringify(messages));
     displayMessages();
 }
-// Variables globales para controlar el estado
 let audioInstance = null;
+let isPlaying = false; // Estado para saber si la música está sonando
 let stopButton = null;
 
 function playMusic() {
-    // Si ya existe una reproducción, detenerla primero
-    if(audioInstance) {
-        stopMusic();
-    }
-
-    // Crear nueva instancia de audio
-    audioInstance = new Audio('audio/cancion.mp3');
     const musicCard = document.querySelector('.photo-card:nth-child(2)');
 
-    // Crear el botón de detener si no existe
-    if(!stopButton) {
+    // Si la música ya está sonando, pausarla
+    if (audioInstance && isPlaying) {
+        audioInstance.pause();
+        isPlaying = false;
+        stopButton.textContent = '▶️ Reanudar música';
+        return;
+    }
+
+    // Si la música está pausada, reanudarla
+    if (audioInstance && !isPlaying) {
+        audioInstance.play();
+        isPlaying = true;
+        stopButton.textContent = '⏹️ Detener música';
+        return;
+    }
+
+    // Crear una nueva instancia de audio si no existe
+    audioInstance = new Audio('audio/cancion.mp3');
+
+    // Crear el botón si no existe
+    if (!stopButton) {
         stopButton = document.createElement('button');
         stopButton.textContent = '⏹️ Detener música';
         stopButton.style.marginTop = '10px';
-        stopButton.onclick = stopMusic;
-        
-        // Agregar estilo al botón
         stopButton.style.backgroundColor = '#ff4444';
         stopButton.style.color = 'white';
         stopButton.style.padding = '8px 16px';
         stopButton.style.borderRadius = '20px';
         stopButton.style.cursor = 'pointer';
+
+        stopButton.addEventListener('click', stopMusic);
     }
 
-    // Intentar reproducir
+    // Reproducir el audio
     audioInstance.play()
         .then(() => {
-            // Agregar el botón si no está presente
-            if(!musicCard.contains(stopButton)) {
+            isPlaying = true;
+            if (!musicCard.contains(stopButton)) {
                 musicCard.appendChild(stopButton);
             }
         })
-        .catch(error => {
+        .catch(() => {
             handlePlayError();
         });
 
-    // Limpiar cuando termine la canción
-    audioInstance.addEventListener('ended', stopMusic);
+    // Cuando el audio termine, reiniciar el estado
+    audioInstance.addEventListener('ended', () => {
+        stopMusic();
+        isPlaying = false;
+    });
 }
 
 function stopMusic() {
-    if(audioInstance) {
-        audioInstance.pause();
-        audioInstance.currentTime = 0;
-        audioInstance = null;
+    if (audioInstance) {
+        audioInstance.pause(); // Pausar la música
+        audioInstance.currentTime = 0; // Reiniciar el tiempo de reproducción
+        isPlaying = false; // Actualizar el estado
     }
-    
-    if(stopButton) {
-        stopButton.remove();
-        stopButton = null;
+
+    if (stopButton) {
+        stopButton.remove(); // Eliminar el botón del DOM
+        stopButton = null; // Resetear la referencia
     }
+
+    audioInstance = null; // Resetear la instancia
 }
 
 function handlePlayError() {
-    alert('¡Primero haz clic en cualquier parte de la página! 🔇');
-    
-    // Configurar el evento de clic una sola vez
+    alert('¡Primero haz clic en cualquier parte de la página para habilitar el audio! 🔇');
+
     const clickHandler = () => {
         playMusic();
         document.body.removeEventListener('click', clickHandler);
     };
-    
+
     document.body.addEventListener('click', clickHandler);
 }
 // Inicialización
