@@ -80,58 +80,82 @@ function deleteMessage(index) {
     localStorage.setItem('mothersDayMessages', JSON.stringify(messages));
     displayMessages();
 }
-let audioInstance = null;
-let stopButton = null;
-let isPlaying = false; // Estado para saber si la música está sonando
+// Variables globales
+let audioInstance = null; // Almacena la instancia de Audio
+let stopButton = null; // Referencia al botón de detener
+let isPlaying = false; // Indica si la música está en reproducción
 
+/**
+ * Función principal para reproducir música
+ */
 function playMusic() {
-    const musicCard = document.querySelector('.photo-card:nth-child(2)');
+    const musicCard = document.querySelector('.photo-card:nth-child(2)'); // Selecciona la tarjeta objetivo
 
-    // Crear una nueva instancia de audio si no existe
-    if (!audioInstance) {
-        audioInstance = new Audio('audio/cancion.mp3');
-        audioInstance.addEventListener('ended', stopMusic);
+    // Si ya existe un audio en reproducción, pausarlo
+    if (audioInstance && isPlaying) {
+        pauseMusic();
+        return;
     }
 
-    // Alternar entre reproducir y pausar
-    if (isPlaying) {
-        audioInstance.pause();
-        isPlaying = false;
-        updateStopButton('▶️ Reanudar música');
-    } else {
+    // Si ya existe un audio, pero está pausado, reanudarlo
+    if (audioInstance && !isPlaying) {
         audioInstance.play()
             .then(() => {
-                isPlaying = true;
-                updateStopButton('⏹️ Detener música');
-                if (!stopButton) {
-                    createStopButton(musicCard);
-                }
+                isPlaying = true; // Actualiza el estado
+                updateStopButton('⏹️ Detener música'); // Cambia el texto del botón
             })
-            .catch(handlePlayError);
+            .catch(handlePlayError); // Maneja errores de reproducción
+        return;
+    }
+
+    // Crear una nueva instancia de audio si no existe ninguna
+    audioInstance = new Audio('audio/cancion.mp3');
+
+    // Intentar reproducir el audio
+    audioInstance.play()
+        .then(() => {
+            isPlaying = true; // Actualiza el estado
+            updateStopButton('⏹️ Detener música'); // Cambia el texto del botón
+            if (!stopButton) createStopButton(musicCard); // Crea el botón si no existe
+        })
+        .catch(handlePlayError); // Maneja errores de reproducción
+
+    // Añadir un evento para cuando el audio termine
+    audioInstance.addEventListener('ended', stopMusic);
+}
+
+/**
+ * Pausa la música sin reiniciarla
+ */
+function pauseMusic() {
+    if (audioInstance) {
+        audioInstance.pause(); // Pausa el audio
+        isPlaying = false; // Actualiza el estado
+        updateStopButton('▶️ Reanudar música'); // Cambia el texto del botón
     }
 }
 
+/**
+ * Detiene la música y reinicia el estado
+ */
 function stopMusic() {
     if (audioInstance) {
-        audioInstance.pause();
-        audioInstance.currentTime = 0; // Reiniciar el audio
-        isPlaying = false;
+        audioInstance.pause(); // Pausa el audio
+        audioInstance.currentTime = 0; // Reinicia el tiempo
+        audioInstance = null; // Limpia la referencia
+        isPlaying = false; // Actualiza el estado
     }
 
     if (stopButton) {
-        stopButton.remove(); // Eliminar el botón del DOM
-        stopButton = null; // Resetear la referencia
-    }
-
-    audioInstance = null; // Resetear la instancia
-}
-
-function updateStopButton(text) {
-    if (stopButton) {
-        stopButton.textContent = text;
+        stopButton.remove(); // Elimina el botón del DOM
+        stopButton = null; // Limpia la referencia
     }
 }
 
+/**
+ * Crea el botón para detener la música
+ * @param {HTMLElement} musicCard - El contenedor donde se añadirá el botón
+ */
 function createStopButton(musicCard) {
     stopButton = document.createElement('button');
     stopButton.textContent = '⏹️ Detener música';
@@ -142,17 +166,36 @@ function createStopButton(musicCard) {
     stopButton.style.borderRadius = '20px';
     stopButton.style.cursor = 'pointer';
 
+    // Asigna la función de detener música al botón
     stopButton.addEventListener('click', stopMusic);
 
+    // Añade el botón al contenedor
     musicCard.appendChild(stopButton);
 }
 
-function handlePlayError() {
-    alert('¡Haz clic en cualquier parte de la página para habilitar el audio! 🔇');
+/**
+ * Actualiza el texto del botón de control
+ * @param {string} text - El nuevo texto del botón
+ */
+function updateStopButton(text) {
+    if (stopButton) {
+        stopButton.textContent = text; // Cambia el texto del botón
+    }
+}
 
-    document.body.addEventListener('click', () => {
+/**
+ * Maneja errores al intentar reproducir el audio
+ */
+function handlePlayError() {
+    alert('El navegador ha bloqueado el audio. Haz clic en cualquier parte de la página para habilitarlo.');
+
+    const enableAudio = () => {
         playMusic();
-    }, { once: true });
+        document.body.removeEventListener('click', enableAudio);
+    };
+
+    // Espera a que el usuario haga clic para habilitar el audio
+    document.body.addEventListener('click', enableAudio, { once: true });
 }
 // Inicialización
 window.onload = function() {
