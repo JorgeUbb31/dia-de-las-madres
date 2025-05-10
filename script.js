@@ -81,69 +81,41 @@ function deleteMessage(index) {
     displayMessages();
 }
 let audioInstance = null;
-let isPlaying = false; // Estado para saber si la música está sonando
 let stopButton = null;
+let isPlaying = false; // Estado para saber si la música está sonando
 
 function playMusic() {
     const musicCard = document.querySelector('.photo-card:nth-child(2)');
 
-    // Si la música ya está sonando, pausarla
-    if (audioInstance && isPlaying) {
+    // Crear una nueva instancia de audio si no existe
+    if (!audioInstance) {
+        audioInstance = new Audio('audio/cancion.mp3');
+        audioInstance.addEventListener('ended', stopMusic);
+    }
+
+    // Alternar entre reproducir y pausar
+    if (isPlaying) {
         audioInstance.pause();
         isPlaying = false;
-        stopButton.textContent = '▶️ Reanudar música';
-        return;
+        updateStopButton('▶️ Reanudar música');
+    } else {
+        audioInstance.play()
+            .then(() => {
+                isPlaying = true;
+                updateStopButton('⏹️ Detener música');
+                if (!stopButton) {
+                    createStopButton(musicCard);
+                }
+            })
+            .catch(handlePlayError);
     }
-
-    // Si la música está pausada, reanudarla
-    if (audioInstance && !isPlaying) {
-        audioInstance.play();
-        isPlaying = true;
-        stopButton.textContent = '⏹️ Detener música';
-        return;
-    }
-
-    // Crear una nueva instancia de audio si no existe
-    audioInstance = new Audio('audio/cancion.mp3');
-
-    // Crear el botón si no existe
-    if (!stopButton) {
-        stopButton = document.createElement('button');
-        stopButton.textContent = '⏹️ Detener música';
-        stopButton.style.marginTop = '10px';
-        stopButton.style.backgroundColor = '#ff4444';
-        stopButton.style.color = 'white';
-        stopButton.style.padding = '8px 16px';
-        stopButton.style.borderRadius = '20px';
-        stopButton.style.cursor = 'pointer';
-
-        stopButton.addEventListener('click', stopMusic);
-    }
-
-    // Reproducir el audio
-    audioInstance.play()
-        .then(() => {
-            isPlaying = true;
-            if (!musicCard.contains(stopButton)) {
-                musicCard.appendChild(stopButton);
-            }
-        })
-        .catch(() => {
-            handlePlayError();
-        });
-
-    // Cuando el audio termine, reiniciar el estado
-    audioInstance.addEventListener('ended', () => {
-        stopMusic();
-        isPlaying = false;
-    });
 }
 
 function stopMusic() {
     if (audioInstance) {
-        audioInstance.pause(); // Pausar la música
-        audioInstance.currentTime = 0; // Reiniciar el tiempo de reproducción
-        isPlaying = false; // Actualizar el estado
+        audioInstance.pause();
+        audioInstance.currentTime = 0; // Reiniciar el audio
+        isPlaying = false;
     }
 
     if (stopButton) {
@@ -154,15 +126,33 @@ function stopMusic() {
     audioInstance = null; // Resetear la instancia
 }
 
+function updateStopButton(text) {
+    if (stopButton) {
+        stopButton.textContent = text;
+    }
+}
+
+function createStopButton(musicCard) {
+    stopButton = document.createElement('button');
+    stopButton.textContent = '⏹️ Detener música';
+    stopButton.style.marginTop = '10px';
+    stopButton.style.backgroundColor = '#ff4444';
+    stopButton.style.color = 'white';
+    stopButton.style.padding = '8px 16px';
+    stopButton.style.borderRadius = '20px';
+    stopButton.style.cursor = 'pointer';
+
+    stopButton.addEventListener('click', stopMusic);
+
+    musicCard.appendChild(stopButton);
+}
+
 function handlePlayError() {
-    alert('¡Primero haz clic en cualquier parte de la página para habilitar el audio! 🔇');
+    alert('¡Haz clic en cualquier parte de la página para habilitar el audio! 🔇');
 
-    const clickHandler = () => {
+    document.body.addEventListener('click', () => {
         playMusic();
-        document.body.removeEventListener('click', clickHandler);
-    };
-
-    document.body.addEventListener('click', clickHandler);
+    }, { once: true });
 }
 // Inicialización
 window.onload = function() {
